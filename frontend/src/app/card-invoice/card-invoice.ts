@@ -39,7 +39,7 @@ export class CardInvoice implements OnInit {
       return;
     }
 
-    const selectedCard = this.cards.find(c => c.cardId === cardId);
+    const selectedCard = this.cards.find(c => c.creditCardId === cardId);
     
     if (selectedCard) {
       this.setInvoiceDateBasedOnClosingDay(selectedCard);
