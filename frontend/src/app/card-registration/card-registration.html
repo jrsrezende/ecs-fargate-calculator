@@ -1,0 +1,49 @@
+<div class="card p-3">
+
+  <h3 class="card-title">Register New Card</h3>
+
+  <form [formGroup]="cardForm" (ngSubmit)="onSubmit()">
+
+    <div class="mb-3">
+      <label for="name" class="form-label">Card Name:</label>
+      <input id="name" type="text" class="form-control" formControlName="name">
+      
+      @if (cardForm.get('name')?.invalid && cardForm.get('name')?.touched) {
+        <div class="text-danger mt-1">
+          @if (cardForm.get('name')?.hasError('required')) {
+            <small>Name is required.</small>
+          }
+        </div>
+      }
+    </div>
+    
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="closingDay" class="form-label">Closing Day:</label>
+        <input id="closingDay" type="number" class="form-control" formControlName="closingDay">
+        
+        @if (cardForm.get('closingDay')?.invalid && cardForm.get('closingDay')?.touched) {
+          <div class="text-danger mt-1">
+            <small>Day must be between 1 and 31.</small>
+          </div>
+        }
+      </div>
+      
+      <div class="col-md-6 mb-3">
+        <label for="dueDay" class="form-label">Due Day:</label>
+        <input id="dueDay" type="number" class="form-control" formControlName="dueDay">
+        
+        @if (cardForm.get('dueDay')?.invalid && cardForm.get('dueDay')?.touched) {
+          <div class="text-danger mt-1">
+            <small>Day must be between 1 and 31.</small>
+          </div>
+        }
+      </div>
+    </div> 
+
+    <button type="submit" class="btn btn-primary w-100" [disabled]="cardForm.invalid">
+      Save Card
+    </button>
+    
+  </form>
+</div>

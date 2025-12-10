@@ -1,0 +1,78 @@
+<div class="card p-3">
+  
+  <h3 class="card-title">Register Expense</h3>
+
+  <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+    
+    <div class="mb-3">
+      <label for="creditCardId" class="form-label">Card:</label>
+
+      <select id="creditCardId" class="form-select" formControlName="creditCardId">
+        <option value="" disabled>Select a card</option>
+        @for (card of cards; track card.cardId) {
+          <option [value]="card.cardId">
+            {{ card.name }}
+          </option>
+        }
+      </select>
+
+      @if (expenseForm.get('creditCardId')?.invalid && expenseForm.get('creditCardId')?.touched) {
+        <div class="text-danger mt-1">
+          @if (expenseForm.get('creditCardId')?.hasError('required')) {
+            <small>Card is required.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description:</label>
+
+      <input id="description" class="form-control" formControlName="description">
+
+      @if (expenseForm.get('description')?.invalid && expenseForm.get('description')?.touched) {
+        <div class="text-danger mt-1">
+          @if (expenseForm.get('description')?.hasError('required')) {
+            <small>Description is required.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="amount" class="form-label">Amount (R$):</label>
+
+      <div class="input-group">
+        <span class="input-group-text">R$</span>
+        <input id="amount" type="number" class="form-control" formControlName="amount">
+      </div>
+
+      @if (expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched) {
+        <div class="text-danger mt-1">
+          @if (expenseForm.get('amount')?.hasError('required')) {
+            <small>Amount is required.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="date" class="form-label">Date:</label>
+
+      <input id="date" type="date" class="form-control" formControlName="date">
+
+      @if (expenseForm.get('date')?.errors && expenseForm.get('date')?.touched) {
+        <div class="text-danger mt-1">
+          @if (expenseForm.get('date')?.hasError('required')) {
+            <small>Date is required.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100" [disabled]="expenseForm.invalid">
+      Submit Expense
+    </button>
+
+  </form>
+</div>

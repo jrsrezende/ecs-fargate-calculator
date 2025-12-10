@@ -1,0 +1,81 @@
+<div class="card p-3">
+
+  <h2 class="card-title">Invoice</h2>
+
+  <div class="mb-3">
+    <label for="card-select" class="form-label">Select a Card:</label>
+    <select id="card-select" 
+            class="form-select form-select-lg" 
+            (change)="onCardSelected($event)">
+      <option value="">-- Select --</option>
+
+      @for (card of cards; track card.cardId) {
+        <option [value]="card.cardId">
+          {{ card.name }}
+        </option>
+      }
+    </select>
+  </div>
+
+  @if (isLoading) {
+    <div class="d-flex justify-content-center my-3">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Fetching invoice...</span>
+      </div>
+    </div>
+  }
+
+  @if (selectedInvoice && !isLoading) {
+    
+    <p class="fs-4 fw-bold">
+      Total: 
+      <span class="text-success">
+        {{ selectedInvoice.totalAmount | currency:'BRL' }}
+      </span>
+    </p>
+    
+    <p class="text-muted">
+      Period: {{ selectedInvoice.invoiceStartDate | date:'dd/MM/yyyy' }}
+      to {{ selectedInvoice.invoiceEndDate | date:'dd/MM/yyyy' }}
+    </p>
+
+    <p class="fw-bold text-danger">
+      Due Date: {{ selectedInvoice.dueDate | date:'dd/MM/yyyy' }}
+    </p>
+    
+    <h4 class="mt-4">Expenses:</h4>
+    
+    <ul class="list-group list-group-flush">
+      @for (charge of selectedInvoice.expenses; track charge.chargeId) {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          
+          <div>
+            {{ charge.description }}
+            <br>
+            <small class="text-muted">{{ charge.date | date:'dd/MM' }}</small>
+          </div>
+          
+          <span class="fw-bold">
+            {{ charge.amount | currency:'BRL' }}
+          </span>
+        </li>
+      }
+    </ul>
+
+    @if (selectedCardId) {
+      <div class="mb-3">
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between align-items-center">
+          <button class="btn btn-outline-primary" (click)="changeMonth(-1)" [disabled]="isLoading"> 
+            &larr; Previous
+          </button>
+          
+          <button class="btn btn-outline-primary" (click)="changeMonth(1)" [disabled]="isLoading">
+            Next &rarr;
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

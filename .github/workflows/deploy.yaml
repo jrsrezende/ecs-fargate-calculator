@@ -1,0 +1,129 @@
+name: Deploy FullStack ECS
+
+on:
+  push: 
+    branches: [main]
+  workflow_dispatch:
+  inputs:
+      target_action:
+        description: 'Selecione a ação: Deploy (Cria/Atualiza) ou Destroy (Deleta a infraestrutura)'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - destroy
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_BACKEND: calculator-backend 
+  ECR_REPOSITORY_FRONTEND: calculator-frontend
+  IAM_ROLE_ARN: arn:aws:iam::399317225776:role/GitHubActionsDeployRole
+
+permissions:
+  id-token: write 
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target_action == 'deploy')
+    outputs:
+      image_tag: ${{ steps.gerar_tag.outputs.sha }} 
+    
+    steps:
+      - name: Baixar Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Gerar Tag Única (Git SHA curto)
+        id: gerar_tag
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build e Push Backend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.gerar_tag.outputs.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG -f ./backend/Dockerfile ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
+
+      - name: Build e Push Frontend
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.gerar_tag.outputs.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG -f ./frontend/Dockerfile ./frontend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
+          
+  deploy-infra:
+    needs: build-and-push 
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target_action == 'deploy')
+    
+    steps:
+      - name: Baixar Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init (Configuração de Backend Remoto)
+        run: |
+          terraform init \
+            -backend-config="bucket=tf-state-calculator" \
+            -backend-config="key=ecs/calculator.tfstate" \
+            -backend-config="region=us-east-1" \
+            -backend-config="dynamodb_table=terraform-lock-table"
+        working-directory: ./infra
+
+      - name: Terraform Apply
+        env:
+          NEW_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+        run: |
+          terraform apply -auto-approve -var="frontend_image_tag=$NEW_TAG" -var="backend_image_tag=$NEW_TAG"
+        working-directory: ./infra
+        
+  destroy-infra-manual:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target_action == 'destroy'
+    
+    steps:
+      - name: Baixar Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.IAM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init (Conectando ao Backend)
+        run: |
+          terraform init \
+            -backend-config="bucket=tf-state-calculator-399317225776" \
+            -backend-config="key=ecs/calculator.tfstate" \
+            -backend-config="region=us-east-1" \
+            -backend-config="dynamodb_table=terraform-lock-table"
+        working-directory: ./infra
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+        working-directory: ./infra
