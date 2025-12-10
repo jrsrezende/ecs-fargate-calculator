@@ -1,5 +1,5 @@
 export interface CreditCard {
-  cardId: string;
+  creditCardId: string;
   cardGroup: string;
   name: string;
   closingDay: number;
