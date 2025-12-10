@@ -9,8 +9,8 @@
 
       <select id="creditCardId" class="form-select" formControlName="creditCardId">
         <option value="" disabled>Select a card</option>
-        @for (card of cards; track card.cardId) {
-          <option [value]="card.cardId">
+        @for (card of cards; track card.creditCardId) {
+          <option [value]="card.creditCardId">
             {{ card.name }}
           </option>
         }
