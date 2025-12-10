@@ -4,15 +4,15 @@ on:
   push: 
     branches: [main]
   workflow_dispatch:
-  inputs:
-    target_action:
-      description: 'Selecione a ação: Deploy (Cria/Atualiza) ou Destroy (Deleta a infraestrutura)'
-      required: true
-      default: 'deploy'
-      type: choice
-      options:
-        - deploy
-        - destroy
+    inputs:
+      target_action:
+        description: 'Selecione a ação: Deploy (Cria/Atualiza) ou Destroy (Deleta a infraestrutura)'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - destroy
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY_BACKEND: calculator-backend 
