@@ -118,7 +118,7 @@ jobs:
       - name: Terraform Init (Conectando ao Backend)
         run: |
           terraform init \
-            -backend-config="bucket=tf-state-calculator-399317225776" \
+            -backend-config="bucket=tf-state-calculator" \
             -backend-config="key=ecs/calculator.tfstate" \
             -backend-config="region=us-east-1" \
             -backend-config="dynamodb_table=terraform-lock-table"
